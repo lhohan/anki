@@ -1,4 +1,4 @@
 anki
 ====
 
-An anki parser just reading a custom, easy to work with, personal text format and generating anki ouput format
+Generates files to be imported into Anki from files I consider to be more handy than using excel or other worksheet type tools.

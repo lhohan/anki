@@ -7,33 +7,34 @@ object AnkiApp extends App {
 
   import Anki._
 
-  def parseArgs(args: Array[String]) = {
+  parseArgs(args) match {
+    case None => printUsage
+    case Some((inputFile, outFile)) =>
+      val linesInMem = Source.fromFile(inputFile).getLines.filterNot(comment).toList
+      val validCards = toDeck(linesInMem).filter(_.valid)
+      val writer = new PrintWriter(outFile)
+      validCards.foreach(card => writer.println(card.front + "\t" + card.back + "\t" + card.detail + "\t" + card.info + "\t" + card.hint))
+      writer.close()
+
+      printSummary(validCards, outFile, toDeck(linesInMem))
+  }
+  
+  private def comment(line:String) : Boolean = line.startsWith("//")
+
+  private def printSummary(validCards: List[Card], outFile: String, deck: Deck) {
+    println(s"Cards written: ${validCards.size} to ${outFile}")
+    if (deck.size > validCards.size) {
+      deck.filterNot(_.valid).foreach(c => println("Invalid card found. Skipped: " + c))
+    }
+  }
+
+  private def parseArgs(args: Array[String]) = {
     args match {
       case Array(input) =>
         Some((input, input + "_anki.txt"))
       case Array(input, output, _*) =>
         Some((input, output))
       case Array() => None
-    }
-  }
-
-  val files = parseArgs(args)
-
-  if(files.isEmpty)
-    printUsage
-  else{
-    val (inputFile,outFile) = files.get
-    val linesInMem = Source.fromFile(inputFile).getLines.filterNot(_.startsWith("//")).toList
-    val deck = newDeck(linesInMem)
-    val writer = new PrintWriter(outFile)
-    val validCards = deck.filter(_.valid)
-    validCards.foreach(card => writer.println(card.front + "\t" + card.back + "\t" + card.detail + "\t" + card.info + "\t" + card.hint))
-    writer.close()
-
-    //printSummary
-    println(s"Cards written: ${validCards.size} to ${outFile}")
-    if (deck.size > validCards.size) {
-      deck.filterNot(_.valid).foreach(c => println("Invalid card found. Skipped: " + c))
     }
   }
 
@@ -59,7 +60,7 @@ object Anki {
     }
   }
 
-  def newDeck(lines: List[String]): Deck = {
+  def toDeck(lines: List[String]): Deck = {
     val cardLines = group(lines)
     cardLines.map {
       list =>

@@ -23,7 +23,7 @@ class AnkiTest extends FlatSpec {
 
     val lines = List("front 1","back 1", "  ", "front 2","  back 2", "","   front 3","back 3")
 
-    val deck = newDeck(lines)
+    val deck = toDeck(lines)
 
     assert(3 === deck.size, s"wrong number of cards in $deck")
   }
@@ -46,7 +46,7 @@ class AnkiTest extends FlatSpec {
 
     val lines = List("#info", "front 1",",hint","back 1", "back 2", ".detail")
 
-    val deck = newDeck(lines)
+    val deck = toDeck(lines)
 
     assert(1 === deck.size, s"back card continuation: wrong number of cards in $deck")
     val card = deck(0)

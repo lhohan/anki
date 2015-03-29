@@ -1,11 +1,12 @@
 package anki
 
-import scala.io.{ BufferedSource, Source }
 import java.io.PrintWriter
+
+import scala.io.{ BufferedSource, Source }
 
 object AnkiApp extends App {
 
-  import Anki._
+  import anki.Anki._
 
   parseArgs(args) match {
     case None => printUsage()
@@ -28,7 +29,10 @@ object AnkiApp extends App {
   private def parseArgs(args: Array[String]) = {
     args match {
       case Array(input) =>
-        Some((input, input + "_anki.txt"))
+        val outputName: String = {
+          (if (input.contains(".")) input.split('.').init.mkString else input) + "_anki.txt"
+        }
+        Some((input, outputName))
       case Array(input, output, _*) =>
         Some((input, output))
       case Array() => None
@@ -67,12 +71,16 @@ private[anki] object Anki {
 
   //  TODO @tailrec
   def group(lines: List[String]): List[List[String]] = {
-    if (lines.isEmpty) List(List())
-    else {
+    if (lines.isEmpty) {
+      List(List())
+    } else {
       val (current, next) = lines.span(!_.trim.isEmpty)
       val nextNoEmptyHead = next.dropWhile(_.trim.isEmpty)
-      if (nextNoEmptyHead == Nil) List(current)
-      else current :: group(nextNoEmptyHead)
+      if (nextNoEmptyHead == Nil) {
+        List(current)
+      } else {
+        current :: group(nextNoEmptyHead)
+      }
     }
   }
 
@@ -83,7 +91,8 @@ private[anki] object Anki {
         val detail = list.filter(_.startsWith(".")).map(_.tail).mkString(" ")
         val hint = list.filter(_.startsWith(",")).map(_.tail).mkString(" ")
         val info = list.filter(_.startsWith("#")).map(_.tail).mkString(" ")
-        val frontAndBackLines = list.filterNot(line => line.startsWith(".") || line.startsWith("#") || line.startsWith(","))
+        val frontAndBackLines = list.filterNot(line => line.startsWith(".") || line.startsWith("#") || line
+          .startsWith(","))
         frontAndBackLines match {
           case Nil           => Card("No front content", "No back content", detail, info, hint, false)
           case front :: Nil  => Card(front, "No back content", detail, info, hint, false)

@@ -10,7 +10,7 @@ object AnkiApp extends App {
   parseArgs(args) match {
     case None => printUsage
     case Some((inputFile, outFile)) =>
-      val linesInMem = Source.fromFile(inputFile).getLines.filterNot(comment).toList
+      val linesInMem = Source.fromFile(inputFile).getLines().filterNot(comment).toList
       val validCards = toDeck(linesInMem).filter(_.valid)
       val writer = new PrintWriter(outFile)
       validCards.foreach(card => writer.println(
@@ -23,11 +23,11 @@ object AnkiApp extends App {
 
       printSummary(validCards, outFile, toDeck(linesInMem))
   }
-  
-  private def comment(line:String) : Boolean = line.startsWith("//")
+
+  private def comment(line: String): Boolean = line.startsWith("//")
 
   private def printSummary(validCards: List[Card], outFile: String, deck: Deck) {
-    println(s"Cards written: ${validCards.size} to ${outFile}")
+    println(s"Cards written: ${validCards.size} to $outFile")
     if (deck.size > validCards.size) {
       deck.filterNot(_.valid).foreach(c => println("Invalid card found. Skipped: " + c))
     }
@@ -74,8 +74,8 @@ object Anki {
         val info = list.filter(_.startsWith("#")).map(_.tail).mkString(" ")
         val frontAndBackLines = list.filterNot(line => line.startsWith(".") || line.startsWith("#") || line.startsWith(","))
         frontAndBackLines match {
-          case Nil => Card("No front content", "No back content", detail, info, hint, false)
-          case front :: Nil => Card(front, "No back content", detail, info, hint, false)
+          case Nil           => Card("No front content", "No back content", detail, info, hint, false)
+          case front :: Nil  => Card(front, "No back content", detail, info, hint, false)
           case front :: rest => Card(front, rest.mkString(" "), detail, info, hint)
         }
     }

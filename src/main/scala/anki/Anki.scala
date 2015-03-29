@@ -1,6 +1,6 @@
 package anki
 
-import scala.io.Source
+import scala.io.{ BufferedSource, Source }
 import java.io.PrintWriter
 
 object AnkiApp extends App {
@@ -8,23 +8,15 @@ object AnkiApp extends App {
   import Anki._
 
   parseArgs(args) match {
-    case None => printUsage
+    case None => printUsage()
     case Some((inputFile, outFile)) =>
-      val linesInMem = Source.fromFile(inputFile).getLines().filterNot(comment).toList
-      val validCards = toDeck(linesInMem).filter(_.valid)
+      val source = Source.fromFile(inputFile)
       val writer = new PrintWriter(outFile)
-      validCards.foreach(card => writer.println(
-        card.front + "\t" +
-          card.back + "\t" +
-          card.detail + "\t" +
-          card.info + "\t" +
-          card.hint))
+      val (linesInMem, validCards) = transformToAnkiFormat(source, writer)
       writer.close()
 
       printSummary(validCards, outFile, toDeck(linesInMem))
   }
-
-  private def comment(line: String): Boolean = line.startsWith("//")
 
   private def printSummary(validCards: List[Card], outFile: String, deck: Deck) {
     println(s"Cards written: ${validCards.size} to $outFile")
@@ -43,16 +35,35 @@ object AnkiApp extends App {
     }
   }
 
-  private def printUsage = {
+  private def printUsage() = {
     println("usage: Anki <input_file> <output_file>")
   }
 }
 
-object Anki {
+private[anki] object Anki {
 
   case class Card(front: String, back: String, detail: String = "", info: String = "", hint: String = "", valid: Boolean = true)
 
   type Deck = List[Card]
+
+  def transformToAnkiFormat(source: BufferedSource, writer: PrintWriter): (List[String], List[Card]) = {
+
+    def comment(line: String): Boolean = line.startsWith("//")
+
+    val linesInMem = source.getLines().filterNot(comment).toList
+    val validCards = toDeck(linesInMem).filter(_.valid)
+    writeDeckToWriter(validCards, writer)
+    (linesInMem, validCards)
+  }
+
+  private def writeDeckToWriter(validCards: List[Card], writer: PrintWriter): Unit = {
+    validCards.foreach(card => writer.println(
+      card.front + "\t" +
+        card.back + "\t" +
+        card.detail + "\t" +
+        card.info + "\t" +
+        card.hint))
+  }
 
   //  TODO @tailrec
   def group(lines: List[String]): List[List[String]] = {

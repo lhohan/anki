@@ -1,0 +1,20 @@
+Eleanor Roosevelt said: "Do one thing every day that ______."
+scares you
+
+Aristotle: "We are what we repeatedly do. Excellence, then, _______."
+is not an act, but a habit
+
+
+// this is a comment
+
+#Tip 33 The little book of talent
+To learn from a book, ______
+close it
+,What can you with a book?
+.'learning is reaching' : <br>instead of reading 10 pages 4 times and trying to memorize them, read the 10 pages once and try to write a 1 page summary (people remember 50% more material)
+
+What are the two simple concepts behind Anki?
+Active recall testing and spaced repetition
+."Active recall testing" is a practical implementation of 'reaching' an important concept for trying to remember the answer when asked a question.
+.This is in contrast to passive study, where we read, watch or listen to something without pausing to consider if we know the answer.
+.<br>"Spaced Repetition": use (information) or loose it

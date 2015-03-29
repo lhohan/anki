@@ -28,21 +28,21 @@ class AnkiTest extends FlatSpec {
     assert(3 === deck.size, s"wrong number of cards in $deck")
   }
 
-  "creating a new deck in a setup where " +
-    "there are three lines " +
-    "one line starts with a '.' (detail)" +
-    "one line starts with a '#' (info)" +
-    "one line starts with a ',' (hint)" +
-    ""   should
-    "return a deck of " +
-      "1 card which contains " +
-      "value for " +
-      "front, " +
-      "back which contains concat of 2 lines " +
-      "detail" +
-      "info" +
-      "hint" +
-      "" in {
+  """Creating a new deck in a setup where
+      there are three lines
+      one line starts with a '.' (detail)
+      one line starts with a '#' (info)
+      one line starts with a ',' (hint)
+    """   should
+    """return a deck of
+      "1 card which contains
+      "value for
+      "front,
+      "back which contains concat of 2 lines
+      "detail
+      "info
+      "hint
+      """ in {
 
     val lines = List("#info", "front 1",",hint","back 1", "back 2", ".detail")
 

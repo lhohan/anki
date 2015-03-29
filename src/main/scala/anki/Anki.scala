@@ -13,7 +13,12 @@ object AnkiApp extends App {
       val linesInMem = Source.fromFile(inputFile).getLines.filterNot(comment).toList
       val validCards = toDeck(linesInMem).filter(_.valid)
       val writer = new PrintWriter(outFile)
-      validCards.foreach(card => writer.println(card.front + "\t" + card.back + "\t" + card.detail + "\t" + card.info + "\t" + card.hint))
+      validCards.foreach(card => writer.println(
+        card.front + "\t" +
+          card.back + "\t" +
+          card.detail + "\t" +
+          card.info + "\t" +
+          card.hint))
       writer.close()
 
       printSummary(validCards, outFile, toDeck(linesInMem))

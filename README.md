@@ -72,7 +72,7 @@ Content of the front of the card will be:
 
 > To learn from a book, ______
 >
-> What can you learn from a book?
+> What can do with a book?
 
 Content of the back of the card will be:
 

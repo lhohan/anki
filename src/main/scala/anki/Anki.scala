@@ -61,15 +61,23 @@ private[anki] object Anki {
   }
 
   private def writeDeckToWriter(validCards: List[Card], writer: PrintWriter): Unit = {
-    validCards.foreach(card => writer.println(
-      card.front + "\t" +
-        card.back + "\t" +
-        card.detail + "\t" +
-        card.info + "\t" +
-        card.hint))
+    validCards.foreach(card => writer.println(toAnki(card)))
   }
 
-  //  TODO @tailrec
+  /**
+   *   Here we define a line to be imported into Anki.
+   *   When importing into Anki one need to use a card definition that matches.
+   *   TODO : Add to README on how to do this.
+   */
+  protected def toAnki(card: Card): String = {
+    card.front + "\t" +
+      card.back + "\t" +
+      card.detail + "\t" +
+      card.info + "\t" +
+      card.hint
+  }
+
+  //  TODO @tailrec or use streams
   def group(lines: List[String]): List[List[String]] = {
     if (lines.isEmpty) {
       List(List())

@@ -13,7 +13,7 @@ class AnkiTest extends FlatSpec {
 
     val lines = List("line 1", "line 2", "   ", "", "", "lines 3", "line 4", "")
 
-    val grouped = group(lines)
+    val grouped = toDeck(lines)
 
     assert(2 === grouped.size, s"wrong number of groupings in $grouped")
   }

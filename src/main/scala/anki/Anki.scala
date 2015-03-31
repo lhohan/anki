@@ -65,9 +65,9 @@ private[anki] object Anki {
   }
 
   /**
-   *   Here we define a line to be imported into Anki.
-   *   When importing into Anki one need to use a card definition that matches.
-   *   TODO : Add to README on how to do this.
+   * Here we define a line to be imported into Anki.
+   * When importing into Anki one need to use a card definition that matches.
+   * TODO : Add to README on how to do this.
    */
   protected def toAnki(card: Card): String = {
     card.front + "\t" +
@@ -78,34 +78,31 @@ private[anki] object Anki {
   }
 
   //  TODO @tailrec or use streams
-  def group(lines: List[String]): List[List[String]] = {
-    if (lines.isEmpty) {
-      List(List())
-    } else {
-      val (current, next) = lines.span(!_.trim.isEmpty)
-      val nextNoEmptyHead = next.dropWhile(_.trim.isEmpty)
-      if (nextNoEmptyHead == Nil) {
-        List(current)
-      } else {
-        current :: group(nextNoEmptyHead)
+  def toDeck(lines: List[String]): Deck = {
+
+    def toCard(cardLines: List[String]): Option[Card] = {
+      val detail = cardLines.filter(_.startsWith(".")).map(_.tail).mkString(" ")
+      val hint = cardLines.filter(_.startsWith(",")).map(_.tail).mkString(" ")
+      val info = cardLines.filter(_.startsWith("#")).map(_.tail).mkString(" ")
+      val frontAndBackLines = cardLines.filterNot(line => line.startsWith(".") || line.startsWith("#") || line
+        .startsWith(","))
+      frontAndBackLines match {
+        case front :: rest => Some(Card(front, rest.mkString(" "), detail, info, hint))
+        case _ =>
+          println(s"Skipping ... invalid card:${cardLines.mkString("\n")}")
+          None
       }
     }
-  }
 
-  def toDeck(lines: List[String]): Deck = {
-    val cardLines = group(lines)
-    cardLines.map {
-      list =>
-        val detail = list.filter(_.startsWith(".")).map(_.tail).mkString(" ")
-        val hint = list.filter(_.startsWith(",")).map(_.tail).mkString(" ")
-        val info = list.filter(_.startsWith("#")).map(_.tail).mkString(" ")
-        val frontAndBackLines = list.filterNot(line => line.startsWith(".") || line.startsWith("#") || line
-          .startsWith(","))
-        frontAndBackLines match {
-          case Nil           => Card("No front content", "No back content", detail, info, hint, false)
-          case front :: Nil  => Card(front, "No back content", detail, info, hint, false)
-          case front :: rest => Card(front, rest.mkString(" "), detail, info, hint)
-        }
+    if (lines.isEmpty) {
+      List.empty[Card]
+    } else {
+      val (current, next) = lines.span(!_.trim.isEmpty)
+      val nextTrimmed = next.dropWhile(_.trim.isEmpty)
+      toCard(current) match {
+        case Some(card) => card :: toDeck(nextTrimmed)
+        case None       => toDeck(nextTrimmed)
+      }
     }
   }
 

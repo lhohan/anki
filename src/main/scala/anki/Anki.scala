@@ -2,7 +2,7 @@ package anki
 
 import java.io.PrintWriter
 
-import anki.Fields.{ INFO, HINT, DETAIL }
+import anki.Fields.{TAGS, INFO, HINT, DETAIL}
 
 import scala.io.{ BufferedSource, Source }
 
@@ -56,12 +56,13 @@ object Fields {
   case object DETAIL extends Field(".")
   case object HINT extends Field(",")
   case object INFO extends Field("#")
+  case object TAGS extends Field("§")
 
 }
 
 private[anki] object Anki {
 
-  case class Card(front: String, back: String, detail: String = "", info: String = "", hint: String = "")
+  case class Card(front: String, back: String, detail: String = "", info: String = "", hint: String = "", tags: String = "")
 
   type Deck = List[Card]
 
@@ -89,7 +90,8 @@ private[anki] object Anki {
       card.back + "\t" +
       card.detail + "\t" +
       card.info + "\t" +
-      card.hint
+      card.hint + "\t" +
+      card.tags
   }
 
   //  TODO @tailrec or use streams
@@ -110,7 +112,8 @@ private[anki] object Anki {
             backs.mkString(" "),
             DETAIL.filterLines(cardLines),
             INFO.filterLines(cardLines),
-            HINT.filterLines(cardLines)))
+            HINT.filterLines(cardLines),
+            TAGS.filterLines(cardLines)))
         case _ => invalid
       }
     }

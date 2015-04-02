@@ -2,7 +2,7 @@ package anki
 
 import java.io.PrintWriter
 
-import anki.Fields.{TAGS, INFO, HINT, DETAIL}
+import anki.Fields.{ TAGS, INFO, HINT, DETAIL }
 
 import scala.io.{ BufferedSource, Source }
 

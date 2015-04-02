@@ -18,3 +18,16 @@ Active recall testing and spaced repetition
 ."Active recall testing" is a practical implementation of 'reaching' an important concept for trying to remember the answer when asked a question.
 .This is in contrast to passive study, where we read, watch or listen to something without pausing to consider if we know the answer.
 .<br>"Spaced Repetition": use (information) or loose it
+
+this is an invalid card
+
+this is also an invalid card
+# blah
+.foo
+,bar
+
+#invalid
+
+.invalid
+
+,invalid

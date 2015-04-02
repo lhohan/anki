@@ -2,6 +2,8 @@ package anki
 
 import java.io.PrintWriter
 
+import anki.Fields.{ INFO, HINT, DETAIL }
+
 import scala.io.{ BufferedSource, Source }
 
 object AnkiApp extends App {
@@ -19,11 +21,8 @@ object AnkiApp extends App {
       printSummary(validCards, outFile, toDeck(linesInMem))
   }
 
-  private def printSummary(validCards: List[Card], outFile: String, deck: Deck) {
+  private def printSummary(validCards: List[Card], outFile: String, deck: Deck) = {
     println(s"Cards written: ${validCards.size} to $outFile")
-    if (deck.size > validCards.size) {
-      deck.filterNot(_.valid).foreach(c => println("Invalid card found. Skipped: " + c))
-    }
   }
 
   private def parseArgs(args: Array[String]) = {
@@ -44,9 +43,25 @@ object AnkiApp extends App {
   }
 }
 
+object Fields {
+
+  val all = scala.collection.mutable.Map.empty[String, Field]
+
+  sealed abstract class Field(val id: String) {
+    all += (id -> this)
+
+    def filterLines(cardLines: List[String]): String = cardLines.filter(_.startsWith(id)).map(_.tail).mkString(" ")
+  }
+
+  case object DETAIL extends Field(".")
+  case object HINT extends Field(",")
+  case object INFO extends Field("#")
+
+}
+
 private[anki] object Anki {
 
-  case class Card(front: String, back: String, detail: String = "", info: String = "", hint: String = "", valid: Boolean = true)
+  case class Card(front: String, back: String, detail: String = "", info: String = "", hint: String = "")
 
   type Deck = List[Card]
 
@@ -55,7 +70,7 @@ private[anki] object Anki {
     def comment(line: String): Boolean = line.startsWith("//")
 
     val linesInMem = source.getLines().filterNot(comment).toList
-    val validCards = toDeck(linesInMem).filter(_.valid)
+    val validCards = toDeck(linesInMem)
     writeDeckToWriter(validCards, writer)
     (linesInMem, validCards)
   }
@@ -81,16 +96,22 @@ private[anki] object Anki {
   def toDeck(lines: List[String]): Deck = {
 
     def toCard(cardLines: List[String]): Option[Card] = {
-      val detail = cardLines.filter(_.startsWith(".")).map(_.tail).mkString(" ")
-      val hint = cardLines.filter(_.startsWith(",")).map(_.tail).mkString(" ")
-      val info = cardLines.filter(_.startsWith("#")).map(_.tail).mkString(" ")
-      val frontAndBackLines = cardLines.filterNot(line => line.startsWith(".") || line.startsWith("#") || line
-        .startsWith(","))
+      def invalid: None.type = {
+        println(s"Skipping ... invalid card:${cardLines.mkString("\n")}")
+        None
+      }
+
+      val frontAndBackLines = cardLines.filterNot(line => Fields.all.keySet.foldLeft(false)((acc, f) => acc || line.startsWith(f)))
       frontAndBackLines match {
-        case front :: rest => Some(Card(front, rest.mkString(" "), detail, info, hint))
-        case _ =>
-          println(s"Skipping ... invalid card:${cardLines.mkString("\n")}")
-          None
+        case frontOnly :: Nil => invalid
+        case front :: backs => Some(
+          Card(
+            front,
+            backs.mkString(" "),
+            DETAIL.filterLines(cardLines),
+            INFO.filterLines(cardLines),
+            HINT.filterLines(cardLines)))
+        case _ => invalid
       }
     }
 

@@ -95,21 +95,27 @@ private[anki] object Anki {
 
     val reader = source.getLines().filter { line => !comment(line) }
     var validCount = 0
-    reader.foldLeft(List.empty[String]) { (acc, line) =>
+    
+    def writeCard(acc: List[String]): Unit = {
+      toCard(acc.reverse) match {
+        case Right(card) =>
+          writer.println(toAnki(card))
+          validCount = validCount + 1
+        case Left(msg) => println(s"Skipping ... $msg")
+      }
+    }
+    
+    val rest = reader.foldLeft(List.empty[String]) { (acc, line) =>
       if (line.isEmpty) {
         if (acc.nonEmpty) {
-          toCard(acc.reverse) match {
-            case Right(card) =>
-              writer.println(toAnki(card))
-              validCount = validCount + 1
-            case Left(msg) => println(s"Skipping ... $msg")
-          }
+          writeCard(acc)
         }
         List.empty[String]
       } else {
         line :: acc
       }
     }
+    writeCard(rest)
     validCount
   }
 

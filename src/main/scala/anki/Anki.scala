@@ -53,8 +53,9 @@ object Fields {
     def filterLines(cardLines: List[String]): String = cardLines.filter(_.startsWith(id)).map(_.tail).mkString(" ")
   }
 
-  case object DETAIL extends Field(".")
   case object HINT extends Field(",")
+
+  case object DETAIL extends Field(".")
   case object INFO extends Field("#")
   case object TAGS extends Field("§")
 
@@ -125,5 +126,4 @@ private[anki] object Anki {
       card.hint + "\t" +
       card.tags
   }
-
 }

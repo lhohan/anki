@@ -1,10 +1,10 @@
 package anki
 
-import java.io.PrintWriter
+import java.io._
 
 import anki.Fields.{ TAGS, INFO, HINT, DETAIL }
 
-import scala.io.{ BufferedSource, Source }
+import scala.io.Source
 
 object AnkiApp extends App {
 
@@ -15,14 +15,14 @@ object AnkiApp extends App {
     case Some((inputFile, outFile)) =>
       val source = Source.fromFile(inputFile)
       val writer = new PrintWriter(outFile)
-      val (linesInMem, validCards) = transformToAnkiFormat(source, writer)
+      val numberOfValidCards = transformToAnkiFormat(source, writer)
       writer.close()
 
-      printSummary(validCards, outFile, toDeck(linesInMem))
+      printSummary(numberOfValidCards, outFile)
   }
 
-  private def printSummary(validCards: List[Card], outFile: String, deck: Deck) = {
-    println(s"Cards written: ${validCards.size} to $outFile")
+  private def printSummary(validCards: Int, outFile: String) = {
+    println(s"Cards written: $validCards to $outFile")
   }
 
   private def parseArgs(args: Array[String]) = {
@@ -64,20 +64,52 @@ private[anki] object Anki {
 
   case class Card(front: String, back: String, detail: String = "", info: String = "", hint: String = "", tags: String = "")
 
-  type Deck = List[Card]
+  private[anki] def toCard(cardLines: List[String]): Either[String, Card] = {
+    def invalid = Left(s"invalid card: ${cardLines.mkString("\n")}")
 
-  def transformToAnkiFormat(source: BufferedSource, writer: PrintWriter): (List[String], List[Card]) = {
+    // subtle: Fields need to be called at least once for the filterNot to work ...
+    val detail = DETAIL.filterLines(cardLines)
+    val info = INFO.filterLines(cardLines)
+    val hint = HINT.filterLines(cardLines)
+    val tags = TAGS.filterLines(cardLines)
+    val frontAndBackLines = cardLines.filterNot(line => Fields.all.keySet.foldLeft(false)((acc, f) => acc || line.startsWith(f)))
+    frontAndBackLines match {
+      case frontOnly :: Nil => invalid
+      case front :: backs =>
+        Right(
+          Card(
+            front,
+            backs.mkString(" "),
+            detail,
+            info,
+            hint,
+            tags))
+      case _ => invalid
+    }
+  }
+
+  def transformToAnkiFormat(source: Source, writer: PrintWriter): Int = {
 
     def comment(line: String): Boolean = line.startsWith("//")
 
-    val linesInMem = source.getLines().filterNot(comment).toList
-    val validCards = toDeck(linesInMem)
-    writeDeckToWriter(validCards, writer)
-    (linesInMem, validCards)
-  }
-
-  private def writeDeckToWriter(validCards: List[Card], writer: PrintWriter): Unit = {
-    validCards.foreach(card => writer.println(toAnki(card)))
+    val reader = source.getLines().filter { line => !comment(line) }
+    var validCount = 0
+    reader.foldLeft(List.empty[String]) { (acc, line) =>
+      if (line.isEmpty) {
+        if (acc.nonEmpty) {
+          toCard(acc.reverse) match {
+            case Right(card) =>
+              writer.println(toAnki(card))
+              validCount = validCount + 1
+            case Left(msg) => println(s"Skipping ... $msg")
+          }
+        }
+        List.empty[String]
+      } else {
+        line :: acc
+      }
+    }
+    validCount
   }
 
   /**
@@ -92,42 +124,6 @@ private[anki] object Anki {
       card.info + "\t" +
       card.hint + "\t" +
       card.tags
-  }
-
-  //  TODO @tailrec or use streams
-  def toDeck(lines: List[String]): Deck = {
-
-    def toCard(cardLines: List[String]): Option[Card] = {
-      def invalid: None.type = {
-        println(s"Skipping ... invalid card:${cardLines.mkString("\n")}")
-        None
-      }
-
-      val frontAndBackLines = cardLines.filterNot(line => Fields.all.keySet.foldLeft(false)((acc, f) => acc || line.startsWith(f)))
-      frontAndBackLines match {
-        case frontOnly :: Nil => invalid
-        case front :: backs => Some(
-          Card(
-            front,
-            backs.mkString(" "),
-            DETAIL.filterLines(cardLines),
-            INFO.filterLines(cardLines),
-            HINT.filterLines(cardLines),
-            TAGS.filterLines(cardLines)))
-        case _ => invalid
-      }
-    }
-
-    if (lines.isEmpty) {
-      List.empty[Card]
-    } else {
-      val (current, next) = lines.span(!_.trim.isEmpty)
-      val nextTrimmed = next.dropWhile(_.trim.isEmpty)
-      toCard(current) match {
-        case Some(card) => card :: toDeck(nextTrimmed)
-        case None       => toDeck(nextTrimmed)
-      }
-    }
   }
 
 }
